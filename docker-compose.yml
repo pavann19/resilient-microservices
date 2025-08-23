@@ -1,22 +1,18 @@
-
 version: "3.9"
 services:
   gateway:
     build: ./gateway
     ports:
-      - "8080:8000"
+      - "8000"
     environment:
       SERVICE_A_URL: "http://service_a:8000"
       SERVICE_B_URL: "http://service_b:8000"
       SERVICE_C_URL: "http://service_c:8000"
       FALLBACK_URL: "http://fallback:8000"
     depends_on:
-      service_a:
-        condition: service_healthy
-      service_b:
-        condition: service_healthy
-      fallback:
-        condition: service_healthy
+      - service_a
+      - service_b
+      - fallback
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\"); print(1)'"]
       interval: 10s
@@ -28,8 +24,9 @@ services:
     environment:
       REDIS_URL: "redis://redis:6379/0"
     depends_on:
-      redis:
-        condition: service_started
+      - redis
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\"); print(1)'"]
       interval: 10s
@@ -39,7 +36,9 @@ services:
   service_b:
     build: ./service_b
     environment:
-      FAIL_RATE: "0.2"  # 20% simulated failures
+      FAIL_RATE: "0.2"
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\"); print(1)'"]
       interval: 10s
@@ -48,6 +47,8 @@ services:
 
   service_c:
     build: ./service_c
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\"); print(1)'"]
       interval: 10s
@@ -56,6 +57,8 @@ services:
 
   fallback:
     build: ./fallback
+    expose:
+      - "8000"
     healthcheck:
       test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\"); print(1)'"]
       interval: 10s
@@ -64,6 +67,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: ["redis-server", "--save", ""]  # disable disk persistence for demo
+    expose:
+      - "6379"
+    command: ["redis-server", "--save", ""]
