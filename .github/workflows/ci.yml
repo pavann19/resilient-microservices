@@ -1,0 +1,35 @@
+
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Check service requirements install
+        run: |
+          pip install -r gateway/requirements.txt
+          pip install -r service_a/requirements.txt
+          pip install -r service_b/requirements.txt
+          pip install -r service_c/requirements.txt
+          pip install -r fallback/requirements.txt
+      - name: Validate docker-compose
+        run: docker compose config
+      - name: Trigger Render deploys (optional)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Set RENDER_HOOK_* secrets to enable"
+          for hook in RENDER_HOOK_GATEWAY RENDER_HOOK_SERVICE_A RENDER_HOOK_SERVICE_B RENDER_HOOK_SERVICE_C RENDER_HOOK_FALLBACK; do
+            if [ ! -z "${!hook}" ]; then
+              curl -s -X POST "${!hook}" || true
+            fi
+          done
