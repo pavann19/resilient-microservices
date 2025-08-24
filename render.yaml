@@ -1,59 +1,57 @@
+# render.yaml (Corrected & Cleaned Version)
+
 services:
+  # Public-facing gateway service
   - type: web
     name: gateway
     runtime: docker
-    plan: free
-    dockerfilePath: ./gateway/Dockerfile
+    dockerContext: ./gateway
+    healthCheckPath: /health
     envVars:
       - key: SERVICE_A_URL
-        value: https://service-a.onrender.com
+        value: http://service-a:10000
       - key: SERVICE_B_URL
-        value: https://service-b.onrender.com
+        value: http://service-b:10000
       - key: SERVICE_C_URL
-        value: https://service-c.onrender.com
+        value: http://service-c:10000
       - key: FALLBACK_URL
-        value: https://fallback.onrender.com
-    healthCheckPath: /health
-    autoDeploy: true
+        value: http://fallback:10000
 
-  - type: web
+  # Private microservices
+  - type: pserv
     name: service-a
     runtime: docker
-    plan: free
-    dockerfilePath: ./service_a/Dockerfile
+    dockerContext: ./service_a
+    healthCheckPath: /health
     envVars:
       - key: REDIS_URL
-        value: redis://redis:6379/0
-    healthCheckPath: /health
-    autoDeploy: true
+        fromService:
+          type: redis
+          name: redis
+          property: connectionString
 
-  - type: web
+  - type: pserv
     name: service-b
     runtime: docker
-    plan: free
-    dockerfilePath: ./service_b/Dockerfile
+    dockerContext: ./service_b
+    healthCheckPath: /health
     envVars:
       - key: FAIL_RATE
         value: "0.2"
-    healthCheckPath: /health
-    autoDeploy: true
 
-  - type: web
+  - type: pserv
     name: service-c
     runtime: docker
-    plan: free
-    dockerfilePath: ./service_c/Dockerfile
+    dockerContext: ./service_c
     healthCheckPath: /health
-    autoDeploy: true
 
-  - type: web
+  - type: pserv
     name: fallback
     runtime: docker
-    plan: free
-    dockerfilePath: ./fallback/Dockerfile
+    dockerContext: ./fallback
     healthCheckPath: /health
-    autoDeploy: true
 
+# Managed Redis instance
 databases:
   - name: redis
     plan: free
