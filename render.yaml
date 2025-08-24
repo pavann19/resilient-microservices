@@ -1,4 +1,4 @@
-# render.yaml (Corrected & Cleaned Version)
+# render.yaml (Final Refactored Version)
 
 services:
   # Public-facing gateway service
