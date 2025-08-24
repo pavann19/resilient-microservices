@@ -1,0 +1,59 @@
+services:
+  - type: web
+    name: gateway
+    runtime: docker
+    plan: free
+    dockerfilePath: ./gateway/Dockerfile
+    envVars:
+      - key: SERVICE_A_URL
+        value: https://service-a.onrender.com
+      - key: SERVICE_B_URL
+        value: https://service-b.onrender.com
+      - key: SERVICE_C_URL
+        value: https://service-c.onrender.com
+      - key: FALLBACK_URL
+        value: https://fallback.onrender.com
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: service-a
+    runtime: docker
+    plan: free
+    dockerfilePath: ./service_a/Dockerfile
+    envVars:
+      - key: REDIS_URL
+        value: redis://redis:6379/0
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: service-b
+    runtime: docker
+    plan: free
+    dockerfilePath: ./service_b/Dockerfile
+    envVars:
+      - key: FAIL_RATE
+        value: "0.2"
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: service-c
+    runtime: docker
+    plan: free
+    dockerfilePath: ./service_c/Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+
+  - type: web
+    name: fallback
+    runtime: docker
+    plan: free
+    dockerfilePath: ./fallback/Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+
+databases:
+  - name: redis
+    plan: free
